@@ -1,5 +1,16 @@
 # Sequelize-Auto
 
+
+
+## Disclaimer
+Fork of sequelize-auto with some minor additions.
+- Fix: JSON columns with default JSON values.
+- Added: `colsAsObject` flag. When it's true, column definition will be in a separate object. Can be used for JSDoc type definitions.
+- Adjustment: Some minor beautification changes.
+
+### TODO
+- Basic JSDoc generation.
+
 <!-- [![Greenkeeper badge](https://badges.greenkeeper.io/sequelize/sequelize-auto.svg)](https://greenkeeper.io/) -->
 
 [![Build Status](http://img.shields.io/travis/sequelize/sequelize-auto/master.svg)](https://travis-ci.org/sequelize/sequelize-auto) [![Build status](https://ci.appveyor.com/api/projects/status/bf9lb89rmpj6iveb?svg=true)](https://ci.appveyor.com/project/durango/sequelize-auto) [![Code Climate](https://codeclimate.com/github/sequelize/sequelize-auto/badges/gpa.svg)](https://codeclimate.com/github/sequelize/sequelize-auto) [![Test Coverage](https://codeclimate.com/github/sequelize/sequelize-auto/badges/coverage.svg)](https://codeclimate.com/github/sequelize/sequelize-auto/coverage)
