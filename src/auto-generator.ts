@@ -56,10 +56,10 @@ export class AutoGenerator {
     this.space = makeIndent(this.options.spaces, this.options.indentation);
   }
 
-  makeHeaderTemplate(customES6Header: string) {
+  makeHeaderTemplate() {
     let header = '';
     const sp = this.space[1];
-    const headerPreClass = `${customES6Header}\n\n`;
+
     if (this.options.lang === 'ts') {
       header += "import * as Sequelize from 'sequelize';\n";
       header += "import { DataTypes, Model, Optional } from 'sequelize';\n";
@@ -68,7 +68,6 @@ export class AutoGenerator {
       header += 'module.exports = (sequelize, DataTypes) => {\n';
       header += sp + 'return #TABLE#.init(sequelize, DataTypes);\n';
       header += '}\n\n';
-      header += headerPreClass;
       header += 'class #TABLE# extends Sequelize.Model {\n';
       header += sp + 'static init(sequelize, DataTypes) {\n';
       if (this.options.useDefine) {
@@ -97,9 +96,11 @@ export class AutoGenerator {
   generateText() {
     const tableNames = _.keys(this.tables);
 
+    const header = this.makeHeaderTemplate();
+
     const text: { [name: string]: string } = {};
     tableNames.forEach((table) => {
-      let str = '';
+      let str = header;
       const [schemaName, tableNameOrig] = qNameSplit(table);
       const tableName = makeTableName(
         this.options.caseModel,
@@ -156,9 +157,8 @@ export class AutoGenerator {
         }
       }
 
-      const tableData = this.addTable(table);
-      str += tableData.str;
-      str = this.makeHeaderTemplate(`const tableDefinition = ${tableData.tableDefinition}`) + str;
+      str += this.addTable(table);
+
       const lang = this.options.lang;
       if (lang === 'ts' && this.options.useDefine) {
         str += ') as typeof #TABLE#;\n';
@@ -190,7 +190,6 @@ export class AutoGenerator {
   private addTable(table: string) {
     const [schemaName, tableNameOrig] = qNameSplit(table);
     const space = this.space;
-    let tableDefinition = `{\n`;
     let timestamps = (this.options.additional && this.options.additional.timestamps === true) || false;
     let paranoid = (this.options.additional && this.options.additional.paranoid === true) || false;
 
@@ -208,11 +207,7 @@ export class AutoGenerator {
     str = str.substring(0, str.length - 2) + '\n';
 
     // add the table options
-    str += space[1] + '}';
-
-    tableDefinition += str;
-
-    str = 'tableDefinition, \n{\n';
+    str += space[1] + '}, {\n';
     if (!this.options.useDefine) {
       str += space[2] + 'sequelize,\n';
     }
@@ -254,10 +249,12 @@ export class AutoGenerator {
     if (!this.options.noIndexes) {
       str += this.addIndexes(table);
     }
+
     str = space[2] + str.trim();
     str = str.substring(0, str.length - 1);
     str += '\n' + space[1] + '}';
-    return { tableDefinition, str };
+
+    return str;
   }
 
   // Create a string containing field attributes (type, defaultValue, etc.)
