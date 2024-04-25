@@ -41,10 +41,13 @@ export class AutoGenerator {
     schema?: string;
     singularize: boolean;
     useDefine: boolean;
+    colsAsObject: boolean;
     noIndexes?: boolean;
   };
+  attributes: string;
 
   constructor(tableData: TableData, dialect: DialectOptions, options: AutoOptions) {
+    this.attributes = '';
     this.tables = tableData.tables;
     this.foreignKeys = tableData.foreignKeys;
     this.hasTriggerTables = tableData.hasTriggerTables;
@@ -65,11 +68,13 @@ export class AutoGenerator {
       header += "import { DataTypes, Model, Optional } from 'sequelize';\n";
     } else if (this.options.lang === 'es6') {
       header += "const Sequelize = require('sequelize');\n";
+      header += '/**/\n';
       header += 'module.exports = (sequelize, DataTypes) => {\n';
       header += sp + 'return #TABLE#.init(sequelize, DataTypes);\n';
       header += '}\n\n';
       header += 'class #TABLE# extends Sequelize.Model {\n';
       header += sp + 'static init(sequelize, DataTypes) {\n';
+
       if (this.options.useDefine) {
         header += sp + "return sequelize.define('#TABLE#', {\n";
       } else {
@@ -180,8 +185,20 @@ export class AutoGenerator {
       const re = new RegExp('#TABLE#', 'g');
       str = str.replace(re, tableName);
 
+      let headerAppendage = '';
+
+      if (this.options.colsAsObject) {
+        headerAppendage += `\nconst { DataTypes } = Sequelize;`;
+        headerAppendage += `\nconst attributes = ${this.attributes}`;
+        headerAppendage += `\n`;
+      }
+
+      str = str.replace('/**/', headerAppendage);
+
       text[table] = str;
     });
+
+    //
 
     return text;
   }
@@ -190,18 +207,26 @@ export class AutoGenerator {
   private addTable(table: string) {
     const [schemaName, tableNameOrig] = qNameSplit(table);
     const space = this.space;
+    let tableDefinition = '';
     let timestamps = (this.options.additional && this.options.additional.timestamps === true) || false;
     let paranoid = (this.options.additional && this.options.additional.paranoid === true) || false;
 
     // add all the fields
     let str = '';
     const fields = _.keys(this.tables[table]);
-    fields.forEach((field, index) => {
+
+    const fieldItems = fields.map((field) => {
       timestamps ||= this.isTimestampField(field);
       paranoid ||= this.isParanoidField(field);
 
-      str += this.addField(table, field);
+      console.log(str);
+
+      return this.addField(table, field);
     });
+
+    tableDefinition = fieldItems.filter((i) => !!i).join(',\n');
+    str += this.options.colsAsObject ? '...attributes' : tableDefinition;
+    this.attributes = `{\n${tableDefinition}\n}`;
 
     // trim off last ",\n"
     str = str.substring(0, str.length - 2) + '\n';
@@ -466,7 +491,7 @@ export class AutoGenerator {
 
     // removes the last `,` within the attribute options
     str = str.trim().replace(/,+$/, '') + '\n';
-    str = space[2] + str + space[2] + '},\n';
+    str = space[2] + str + space[2] + '}';
     return str;
   }
 
