@@ -229,7 +229,7 @@ export class AutoGenerator {
     this.attributes = `{\n${tableDefinition}\n}`;
 
     // trim off last ",\n"
-    str = str.substring(0, str.length - 2) + '\n';
+    // str = str.substring(0, str.length - 2) + '\n';
 
     // add the table options
     str += space[1] + '}, {\n';
