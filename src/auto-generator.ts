@@ -219,8 +219,6 @@ export class AutoGenerator {
       timestamps ||= this.isTimestampField(field);
       paranoid ||= this.isParanoidField(field);
 
-      console.log(str);
-
       return this.addField(table, field);
     });
 
